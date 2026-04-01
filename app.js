@@ -75,6 +75,18 @@ const nameTranslations = {
   "skills.md": "навыки.md",
   "README.md": "README.md"
 };
+const blockLabels = {
+  ru: {
+    nav: "00-навигация",
+    career: "01-карьера",
+    upgraded: "02-карьера-усиленная"
+  },
+  en: {
+    nav: "00-navigation",
+    career: "01-career",
+    upgraded: "02-career-upgraded"
+  }
+};
 
 function storageKey(path) {
   return `hh-editor::${path}`;
@@ -97,6 +109,28 @@ function isCareerPath(path) {
   }
   const topLevel = path.split("/")[0];
   return careerFolders.has(topLevel);
+}
+
+function isUpgradedPath(path) {
+  return path.startsWith("career-upgraded/");
+}
+
+function blockLabel(key) {
+  const lang = currentLanguage === "en" ? "en" : "ru";
+  return blockLabels[lang][key];
+}
+
+function getDisplayTreePath(path) {
+  if (rootCareerFiles.has(path)) {
+    return `${blockLabel("nav")}/${translatePath(path)}`;
+  }
+
+  if (isUpgradedPath(path)) {
+    const trimmed = path.slice("career-upgraded/".length);
+    return `${blockLabel("upgraded")}/${translatePath(trimmed)}`;
+  }
+
+  return `${blockLabel("career")}/${translatePath(path)}`;
 }
 
 function displayPath(path) {
@@ -183,13 +217,13 @@ function renderMarkdown(text) {
 
 function nestedTree(paths) {
   const root = {};
-  for (const fullPath of paths) {
-    const chunks = fullPath.split("/");
+  for (const item of paths) {
+    const chunks = item.display.split("/");
     let current = root;
     for (let i = 0; i < chunks.length; i += 1) {
       const part = chunks[i];
       if (i === chunks.length - 1) {
-        current[part] = fullPath;
+        current[part] = item.source;
       } else {
         current[part] = current[part] || {};
         current = current[part];
@@ -238,12 +272,22 @@ function renderTreeNode(node, parentElement, pathPrefix = "") {
 function redrawTree(filterTerm = "") {
   treeRoot.innerHTML = "";
   const query = filterTerm.trim().toLowerCase();
+  const entries = markdownFiles.map((path) => ({
+    source: path,
+    display: getDisplayTreePath(path)
+  }));
+
   const list = query
-    ? markdownFiles.filter((f) => {
+    ? entries.filter((item) => {
+      const f = item.source;
       const translated = translatePath(f).toLowerCase();
-      return f.toLowerCase().includes(query) || translated.includes(query);
+      return (
+        f.toLowerCase().includes(query)
+        || translated.includes(query)
+        || item.display.toLowerCase().includes(query)
+      );
     })
-    : markdownFiles;
+    : entries;
 
   if (!list.length) {
     treeRoot.innerHTML = "<p>Ничего не найдено.</p>";
