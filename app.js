@@ -20,17 +20,22 @@ const disconnectBtn = document.getElementById("disconnectBtn");
 const authStatus = document.getElementById("authStatus");
 const commitMessageInput = document.getElementById("commitMessageInput");
 const commitBtn = document.getElementById("commitBtn");
+const languageSelect = document.getElementById("languageSelect");
 
 let markdownFiles = [];
+let translatedFiles = new Set();
 let activeFile = null;
+let activeSourcePath = null;
 let activeSha = null;
 let baseContent = "";
 let loadingFiles = false;
 let commitInProgress = false;
 let githubToken = "";
 let githubUser = "";
+let currentLanguage = "ru";
 
 const tokenStorageKey = "hh-editor::github-token";
+const languageStorageKey = "hh-editor::language";
 const nameTranslations = {
   "companies": "компании",
   "target-companies.md": "целевые-компании.md",
@@ -62,11 +67,31 @@ function getLocalOverride(path) {
   return localStorage.getItem(storageKey(path));
 }
 
+function resolveSourcePath(path) {
+  if (currentLanguage === "ru" && translatedFiles.has(path)) {
+    return `ru/${path}`;
+  }
+  return path;
+}
+
+function displayPath(path) {
+  const translated = translatePath(path);
+  return currentLanguage === "ru" && translatedFiles.has(path)
+    ? `${translated} [RU]`
+    : translated;
+}
+
 function translateName(name) {
+  if (currentLanguage === "en") {
+    return name;
+  }
   return nameTranslations[name] || name;
 }
 
 function translatePath(path) {
+  if (currentLanguage === "en") {
+    return path;
+  }
   return path
     .split("/")
     .map((part) => translateName(part))
@@ -79,7 +104,7 @@ function setDirtyState(isDirty) {
 }
 
 function isDirty() {
-  return Boolean(activeFile) && editor.value !== baseContent;
+  return Boolean(activeSourcePath) && editor.value !== baseContent;
 }
 
 function setActionsEnabled(enabled) {
@@ -252,11 +277,19 @@ async function fetchMarkdownFiles() {
     }
 
     const payload = await res.json();
-    markdownFiles = (payload.tree || [])
+    const allMarkdown = (payload.tree || [])
       .filter((entry) => entry.type === "blob")
       .map((entry) => entry.path)
       .filter((path) => path.toLowerCase().endsWith(".md"))
       .filter((path) => !path.startsWith(".git/"));
+
+    translatedFiles = new Set(
+      allMarkdown
+        .filter((path) => path.startsWith("ru/"))
+        .map((path) => path.slice(3))
+    );
+
+    markdownFiles = allMarkdown.filter((path) => !path.startsWith("ru/"));
 
     markdownFiles.sort((a, b) => a.localeCompare(b));
     repoStatus.textContent = `Найдено ${markdownFiles.length} markdown-файлов`;
@@ -264,6 +297,7 @@ async function fetchMarkdownFiles() {
   } catch (error) {
     console.error(error);
     repoStatus.textContent = "Не удалось загрузить дерево через API, использую резервный список";
+    translatedFiles = new Set();
     markdownFiles = [
       "README.md",
       "linkedin.md",
@@ -318,8 +352,9 @@ async function openFile(path) {
   }
 
   activeFile = path;
-  activePath.textContent = translatePath(path);
-  activePath.title = path;
+  activeSourcePath = resolveSourcePath(path);
+  activePath.textContent = displayPath(path);
+  activePath.title = activeSourcePath;
 
   Array.from(treeRoot.querySelectorAll("button.active")).forEach((button) => {
     button.classList.remove("active");
@@ -331,15 +366,15 @@ async function openFile(path) {
   setActionsEnabled(false);
 
   try {
-    const remote = await loadRemoteContent(path);
+    const remote = await loadRemoteContent(activeSourcePath);
     baseContent = remote.content;
     activeSha = remote.sha;
-    const local = getLocalOverride(path);
+    const local = getLocalOverride(activeSourcePath);
     editor.value = local !== null ? local : baseContent;
     renderMarkdown(editor.value);
     setDirtyState(editor.value !== baseContent);
-    commitMessageInput.value = `Update ${path}`;
-    githubEditLink.href = `https://github.com/${owner}/${repo}/edit/${branch}/${path}`;
+    commitMessageInput.value = `Update ${activeSourcePath}`;
+    githubEditLink.href = `https://github.com/${owner}/${repo}/edit/${branch}/${activeSourcePath}`;
   } catch (error) {
     console.error(error);
     editor.value = "Ошибка загрузки файла.";
@@ -404,7 +439,7 @@ function disconnectToken() {
 }
 
 async function commitActiveFile() {
-  if (!activeFile || !githubToken || !isDirty()) {
+  if (!activeSourcePath || !githubToken || !isDirty()) {
     return;
   }
 
@@ -412,12 +447,12 @@ async function commitActiveFile() {
   commitBtn.textContent = "Коммит...";
   updateCommitButtonState();
 
-  const message = commitMessageInput.value.trim() || `Update ${activeFile}`;
+  const message = commitMessageInput.value.trim() || `Update ${activeSourcePath}`;
 
   try {
-    repoStatus.textContent = `Коммит ${activeFile}...`;
-    const latest = await loadRemoteContent(activeFile);
-    const encodedPath = encodePathForApi(activeFile);
+    repoStatus.textContent = `Коммит ${activeSourcePath}...`;
+    const latest = await loadRemoteContent(activeSourcePath);
+    const encodedPath = encodePathForApi(activeSourcePath);
 
     const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}`, {
       method: "PUT",
@@ -439,7 +474,7 @@ async function commitActiveFile() {
     const payload = await response.json();
     baseContent = editor.value;
     activeSha = payload.content?.sha || activeSha;
-    localStorage.removeItem(storageKey(activeFile));
+    localStorage.removeItem(storageKey(activeSourcePath));
     setDirtyState(false);
     updateCommitButtonState();
     repoStatus.textContent = `Коммит создан: ${payload.commit?.sha?.slice(0, 7) || "OK"}`;
@@ -467,19 +502,19 @@ editor.addEventListener("input", () => {
 });
 
 saveLocalBtn.addEventListener("click", () => {
-  if (!activeFile) {
+  if (!activeSourcePath) {
     return;
   }
-  localStorage.setItem(storageKey(activeFile), editor.value);
+  localStorage.setItem(storageKey(activeSourcePath), editor.value);
   setDirtyState(editor.value !== baseContent);
   updateCommitButtonState();
 });
 
 resetLocalBtn.addEventListener("click", () => {
-  if (!activeFile) {
+  if (!activeSourcePath) {
     return;
   }
-  localStorage.removeItem(storageKey(activeFile));
+  localStorage.removeItem(storageKey(activeSourcePath));
   editor.value = baseContent;
   renderMarkdown(editor.value);
   setDirtyState(false);
@@ -499,16 +534,26 @@ copyBtn.addEventListener("click", async () => {
 });
 
 downloadBtn.addEventListener("click", () => {
-  if (!activeFile) {
+  if (!activeSourcePath) {
     return;
   }
   const blob = new Blob([editor.value], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = activeFile.split("/").at(-1) || "document.md";
+  a.download = activeSourcePath.split("/").at(-1) || "document.md";
   a.click();
   URL.revokeObjectURL(url);
+});
+
+languageSelect.addEventListener("change", async () => {
+  currentLanguage = languageSelect.value === "en" ? "en" : "ru";
+  localStorage.setItem(languageStorageKey, currentLanguage);
+  redrawTree(searchInput.value);
+
+  if (activeFile) {
+    await openFile(activeFile);
+  }
 });
 
 connectBtn.addEventListener("click", () => {
@@ -525,6 +570,10 @@ commitBtn.addEventListener("click", () => {
 
 (async function bootstrap() {
   setActionsEnabled(false);
+  const savedLanguage = localStorage.getItem(languageStorageKey);
+  currentLanguage = savedLanguage === "en" ? "en" : "ru";
+  languageSelect.value = currentLanguage;
+
   const savedToken = localStorage.getItem(tokenStorageKey);
 
   if (savedToken) {

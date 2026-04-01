@@ -181,6 +181,7 @@ body {
   align-items: center;
   gap: 10px;
   min-width: 0;
+  flex-wrap: wrap;
 }
 
 .file-meta strong {
@@ -188,6 +189,18 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 48vw;
+}
+
+.lang-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.lang-select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 8px;
+  background: #fff;
 }
 
 .chip {
