@@ -31,6 +31,28 @@ let githubToken = "";
 let githubUser = "";
 
 const tokenStorageKey = "hh-editor::github-token";
+const nameTranslations = {
+  "companies": "компании",
+  "target-companies.md": "целевые-компании.md",
+  "cover-letters": "сопроводительные-письма",
+  "templates.md": "шаблоны.md",
+  "interviews": "собеседования",
+  "complex-questions.md": "сложные-вопросы.md",
+  "resume": "резюме",
+  "achievements.md": "достижения.md",
+  "resume-main.md": "резюме-основное.md",
+  "stories": "истории",
+  "S001-masshtabirovanie-i-antikrizis.md": "S001-масштабирование-и-антикризис.md",
+  "S002-vnedrenie-crm.md": "S002-внедрение-crm.md",
+  "S003-kalkulyatory-dlya-klientov.md": "S003-калькуляторы-для-клиентов.md",
+  "S004-dashbordy-power-bi.md": "S004-дашборды-power-bi.md",
+  "S005-rost-prodazh.md": "S005-рост-продаж.md",
+  "S006-iso-9001.md": "S006-iso-9001.md",
+  "S007-upravlenie-komandoy.md": "S007-управление-командой.md",
+  "linkedin.md": "линкедин.md",
+  "skills.md": "навыки.md",
+  "README.md": "README.md"
+};
 
 function storageKey(path) {
   return `hh-editor::${path}`;
@@ -38,6 +60,17 @@ function storageKey(path) {
 
 function getLocalOverride(path) {
   return localStorage.getItem(storageKey(path));
+}
+
+function translateName(name) {
+  return nameTranslations[name] || name;
+}
+
+function translatePath(path) {
+  return path
+    .split("/")
+    .map((part) => translateName(part))
+    .join("/");
 }
 
 function setDirtyState(isDirty) {
@@ -135,12 +168,13 @@ function renderTreeNode(node, parentElement, pathPrefix = "") {
     if (typeof value === "object") {
       const dirLabel = document.createElement("div");
       dirLabel.className = "dir";
-      dirLabel.textContent = name;
+      dirLabel.textContent = translateName(name);
       li.appendChild(dirLabel);
       renderTreeNode(value, li, absolutePath);
     } else {
       const btn = document.createElement("button");
-      btn.textContent = name;
+      btn.textContent = translateName(name);
+      btn.title = value;
       btn.dataset.path = value;
       btn.addEventListener("click", () => openFile(value));
       li.appendChild(btn);
@@ -155,7 +189,10 @@ function redrawTree(filterTerm = "") {
   treeRoot.innerHTML = "";
   const query = filterTerm.trim().toLowerCase();
   const list = query
-    ? markdownFiles.filter((f) => f.toLowerCase().includes(query))
+    ? markdownFiles.filter((f) => {
+      const translated = translatePath(f).toLowerCase();
+      return f.toLowerCase().includes(query) || translated.includes(query);
+    })
     : markdownFiles;
 
   if (!list.length) {
@@ -281,7 +318,8 @@ async function openFile(path) {
   }
 
   activeFile = path;
-  activePath.textContent = path;
+  activePath.textContent = translatePath(path);
+  activePath.title = path;
 
   Array.from(treeRoot.querySelectorAll("button.active")).forEach((button) => {
     button.classList.remove("active");
