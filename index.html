@@ -1,0 +1,59 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hh · Job Search Workspace</title>
+  <link rel="stylesheet" href="./app.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Job Search Workspace</h1>
+      <p>Просмотр и редактирование markdown-структуры репозитория <strong>kilevoy/hh</strong></p>
+    </div>
+    <div class="status-box">
+      <span id="repoStatus">Загрузка структуры...</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <label for="searchInput">Поиск по файлам</label>
+      <input id="searchInput" type="search" placeholder="Например: resume" />
+      <div id="treeRoot" class="tree" aria-live="polite"></div>
+    </aside>
+
+    <section class="workspace">
+      <div class="toolbar">
+        <div class="file-meta">
+          <strong id="activePath">Файл не выбран</strong>
+          <span id="dirtyFlag" class="chip">Чисто</span>
+        </div>
+        <div class="actions">
+          <button id="saveLocalBtn" disabled>Сохранить локально</button>
+          <button id="resetLocalBtn" disabled>Сбросить локальные правки</button>
+          <button id="copyBtn" disabled>Копировать</button>
+          <button id="downloadBtn" disabled>Скачать .md</button>
+          <a id="githubEditLink" href="#" target="_blank" rel="noreferrer noopener" class="button-link is-disabled">Открыть на GitHub</a>
+        </div>
+      </div>
+
+      <div class="panes">
+        <div class="pane editor-pane">
+          <h2>Редактор</h2>
+          <textarea id="editor" placeholder="Выберите файл в дереве слева" disabled></textarea>
+        </div>
+        <div class="pane preview-pane">
+          <h2>Предпросмотр</h2>
+          <article id="preview" class="markdown-body">
+            <p>Здесь появится markdown-предпросмотр.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
