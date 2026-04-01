@@ -14,11 +14,23 @@ const resetLocalBtn = document.getElementById("resetLocalBtn");
 const copyBtn = document.getElementById("copyBtn");
 const downloadBtn = document.getElementById("downloadBtn");
 const githubEditLink = document.getElementById("githubEditLink");
+const tokenInput = document.getElementById("tokenInput");
+const connectBtn = document.getElementById("connectBtn");
+const disconnectBtn = document.getElementById("disconnectBtn");
+const authStatus = document.getElementById("authStatus");
+const commitMessageInput = document.getElementById("commitMessageInput");
+const commitBtn = document.getElementById("commitBtn");
 
 let markdownFiles = [];
 let activeFile = null;
+let activeSha = null;
 let baseContent = "";
 let loadingFiles = false;
+let commitInProgress = false;
+let githubToken = "";
+let githubUser = "";
+
+const tokenStorageKey = "hh-editor::github-token";
 
 function storageKey(path) {
   return `hh-editor::${path}`;
@@ -33,12 +45,40 @@ function setDirtyState(isDirty) {
   dirtyFlag.classList.toggle("dirty", isDirty);
 }
 
+function isDirty() {
+  return Boolean(activeFile) && editor.value !== baseContent;
+}
+
 function setActionsEnabled(enabled) {
   saveLocalBtn.disabled = !enabled;
   resetLocalBtn.disabled = !enabled;
   copyBtn.disabled = !enabled;
   downloadBtn.disabled = !enabled;
   githubEditLink.classList.toggle("is-disabled", !enabled);
+  updateCommitButtonState();
+}
+
+function updateCommitButtonState() {
+  const canCommit = Boolean(activeFile) && Boolean(githubToken) && isDirty() && !commitInProgress;
+  commitBtn.disabled = !canCommit;
+}
+
+function setAuthStatus(text, ok = false) {
+  authStatus.textContent = text;
+  authStatus.classList.toggle("ok", ok);
+}
+
+function updateAuthUi() {
+  const authed = Boolean(githubToken);
+  disconnectBtn.disabled = !authed;
+  connectBtn.disabled = commitInProgress;
+  tokenInput.disabled = commitInProgress;
+  if (authed) {
+    setAuthStatus(`Подключено: @${githubUser}`, true);
+  } else {
+    setAuthStatus("Не авторизовано", false);
+  }
+  updateCommitButtonState();
 }
 
 function escapeHtml(text) {
@@ -132,6 +172,38 @@ function redrawTree(filterTerm = "") {
   }
 }
 
+function githubHeaders(extra = {}) {
+  const headers = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    ...extra
+  };
+  if (githubToken) {
+    headers.Authorization = `Bearer ${githubToken}`;
+  }
+  return headers;
+}
+
+function encodePathForApi(path) {
+  return path.split("/").map((chunk) => encodeURIComponent(chunk)).join("/");
+}
+
+function base64ToUtf8(base64Text) {
+  const cleaned = base64Text.replace(/\n/g, "");
+  const binary = atob(cleaned);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function utf8ToBase64(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
 async function fetchMarkdownFiles() {
   loadingFiles = true;
   repoStatus.textContent = "Читаю дерево файлов из GitHub API...";
@@ -179,11 +251,28 @@ async function fetchMarkdownFiles() {
 }
 
 async function loadRemoteContent(path) {
-  const response = await fetch(`./${path}`);
-  if (!response.ok) {
-    throw new Error(`Cannot read ${path}: ${response.status}`);
+  const encodedPath = encodePathForApi(path);
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}?ref=${branch}`;
+
+  const apiResponse = await fetch(apiUrl, { headers: githubHeaders() });
+  if (apiResponse.ok) {
+    const payload = await apiResponse.json();
+    if (payload && payload.type === "file" && typeof payload.content === "string") {
+      return {
+        content: base64ToUtf8(payload.content),
+        sha: payload.sha
+      };
+    }
   }
-  return response.text();
+
+  const fallbackResponse = await fetch(`./${path}`);
+  if (!fallbackResponse.ok) {
+    throw new Error(`Cannot read ${path}: ${fallbackResponse.status}`);
+  }
+  return {
+    content: await fallbackResponse.text(),
+    sha: null
+  };
 }
 
 async function openFile(path) {
@@ -204,11 +293,14 @@ async function openFile(path) {
   setActionsEnabled(false);
 
   try {
-    baseContent = await loadRemoteContent(path);
+    const remote = await loadRemoteContent(path);
+    baseContent = remote.content;
+    activeSha = remote.sha;
     const local = getLocalOverride(path);
     editor.value = local !== null ? local : baseContent;
     renderMarkdown(editor.value);
     setDirtyState(editor.value !== baseContent);
+    commitMessageInput.value = `Update ${path}`;
     githubEditLink.href = `https://github.com/${owner}/${repo}/edit/${branch}/${path}`;
   } catch (error) {
     console.error(error);
@@ -217,6 +309,109 @@ async function openFile(path) {
   } finally {
     editor.disabled = false;
     setActionsEnabled(true);
+  }
+}
+
+async function validateToken(token) {
+  const response = await fetch("https://api.github.com/user", {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Токен не принят (${response.status})`);
+  }
+
+  return response.json();
+}
+
+async function connectToken() {
+  const token = tokenInput.value.trim();
+  if (!token) {
+    alert("Вставьте GitHub token.");
+    return;
+  }
+
+  setAuthStatus("Проверяю токен...");
+  connectBtn.disabled = true;
+
+  try {
+    const user = await validateToken(token);
+    githubToken = token;
+    githubUser = user.login;
+    localStorage.setItem(tokenStorageKey, token);
+    updateAuthUi();
+    repoStatus.textContent = `Авторизация активна: @${githubUser}`;
+  } catch (error) {
+    console.error(error);
+    githubToken = "";
+    githubUser = "";
+    localStorage.removeItem(tokenStorageKey);
+    updateAuthUi();
+    alert(`Не удалось подключиться: ${error.message}`);
+  } finally {
+    connectBtn.disabled = false;
+  }
+}
+
+function disconnectToken() {
+  githubToken = "";
+  githubUser = "";
+  tokenInput.value = "";
+  localStorage.removeItem(tokenStorageKey);
+  updateAuthUi();
+}
+
+async function commitActiveFile() {
+  if (!activeFile || !githubToken || !isDirty()) {
+    return;
+  }
+
+  commitInProgress = true;
+  commitBtn.textContent = "Коммит...";
+  updateCommitButtonState();
+
+  const message = commitMessageInput.value.trim() || `Update ${activeFile}`;
+
+  try {
+    repoStatus.textContent = `Коммит ${activeFile}...`;
+    const latest = await loadRemoteContent(activeFile);
+    const encodedPath = encodePathForApi(activeFile);
+
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}`, {
+      method: "PUT",
+      headers: githubHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        message,
+        content: utf8ToBase64(editor.value),
+        sha: latest.sha || activeSha,
+        branch
+      })
+    });
+
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      const apiMessage = errorPayload.message || `GitHub API error ${response.status}`;
+      throw new Error(apiMessage);
+    }
+
+    const payload = await response.json();
+    baseContent = editor.value;
+    activeSha = payload.content?.sha || activeSha;
+    localStorage.removeItem(storageKey(activeFile));
+    setDirtyState(false);
+    updateCommitButtonState();
+    repoStatus.textContent = `Коммит создан: ${payload.commit?.sha?.slice(0, 7) || "OK"}`;
+  } catch (error) {
+    console.error(error);
+    alert(`Ошибка коммита: ${error.message}`);
+  } finally {
+    commitInProgress = false;
+    commitBtn.textContent = "Commit to GitHub";
+    updateCommitButtonState();
   }
 }
 
@@ -230,6 +425,7 @@ editor.addEventListener("input", () => {
   }
   renderMarkdown(editor.value);
   setDirtyState(editor.value !== baseContent);
+  updateCommitButtonState();
 });
 
 saveLocalBtn.addEventListener("click", () => {
@@ -238,6 +434,7 @@ saveLocalBtn.addEventListener("click", () => {
   }
   localStorage.setItem(storageKey(activeFile), editor.value);
   setDirtyState(editor.value !== baseContent);
+  updateCommitButtonState();
 });
 
 resetLocalBtn.addEventListener("click", () => {
@@ -248,6 +445,7 @@ resetLocalBtn.addEventListener("click", () => {
   editor.value = baseContent;
   renderMarkdown(editor.value);
   setDirtyState(false);
+  updateCommitButtonState();
 });
 
 copyBtn.addEventListener("click", async () => {
@@ -275,5 +473,35 @@ downloadBtn.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-setActionsEnabled(false);
-fetchMarkdownFiles();
+connectBtn.addEventListener("click", () => {
+  connectToken();
+});
+
+disconnectBtn.addEventListener("click", () => {
+  disconnectToken();
+});
+
+commitBtn.addEventListener("click", () => {
+  commitActiveFile();
+});
+
+(async function bootstrap() {
+  setActionsEnabled(false);
+  const savedToken = localStorage.getItem(tokenStorageKey);
+
+  if (savedToken) {
+    tokenInput.value = savedToken;
+    try {
+      const user = await validateToken(savedToken);
+      githubToken = savedToken;
+      githubUser = user.login;
+    } catch (error) {
+      console.warn("Stored token is invalid.", error);
+      localStorage.removeItem(tokenStorageKey);
+      tokenInput.value = "";
+    }
+  }
+
+  updateAuthUi();
+  await fetchMarkdownFiles();
+})();

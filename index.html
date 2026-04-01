@@ -41,6 +41,21 @@
         </div>
       </div>
 
+      <div class="authbar">
+        <div class="auth-main">
+          <label for="tokenInput">GitHub Token (PAT)</label>
+          <input id="tokenInput" type="password" placeholder="ghp_... или github_pat_..." autocomplete="off" />
+          <button id="connectBtn">Подключить</button>
+          <button id="disconnectBtn" disabled>Отключить</button>
+          <span id="authStatus" class="auth-status">Не авторизовано</span>
+        </div>
+        <div class="commit-main">
+          <label for="commitMessageInput">Сообщение коммита</label>
+          <input id="commitMessageInput" type="text" placeholder="Update file via workspace" />
+          <button id="commitBtn" disabled>Commit to GitHub</button>
+        </div>
+      </div>
+
       <div class="panes">
         <div class="pane editor-pane">
           <h2>Редактор</h2>

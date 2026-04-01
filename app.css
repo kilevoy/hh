@@ -120,15 +120,60 @@ body {
   min-width: 0;
 }
 
-.toolbar {
+.toolbar,
+.authbar {
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   background: rgba(255, 250, 241, 0.85);
+}
+
+.toolbar {
   display: flex;
   justify-content: space-between;
   gap: 16px;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.authbar {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-main,
+.commit-main {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.commit-main {
+  grid-template-columns: auto 1fr auto;
+}
+
+.auth-main label,
+.commit-main label {
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.auth-main input,
+.commit-main input {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.auth-status {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.auth-status.ok {
+  color: var(--accent-2);
+  font-weight: 600;
 }
 
 .file-meta {
@@ -246,6 +291,25 @@ button:disabled,
   border-radius: 6px;
 }
 
+@media (max-width: 1280px) {
+  .auth-main {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .auth-main label,
+  .commit-main label {
+    grid-column: 1 / -1;
+  }
+
+  .auth-status {
+    grid-column: 1 / -1;
+  }
+
+  .commit-main {
+    grid-template-columns: 1fr auto;
+  }
+}
+
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;
@@ -263,5 +327,25 @@ button:disabled,
 
   .file-meta strong {
     max-width: 76vw;
+  }
+}
+
+@media (max-width: 720px) {
+  .actions {
+    width: 100%;
+  }
+
+  .actions button,
+  .actions .button-link,
+  .auth-main button,
+  .commit-main button {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  .auth-main,
+  .commit-main {
+    grid-template-columns: 1fr;
   }
 }

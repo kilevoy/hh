@@ -108,3 +108,15 @@ rykunov-job-search/
 ### Ограничения редактирования
 - В браузере правки сохраняются локально (`localStorage`).
 - Для сохранения в репозиторий используйте кнопку `Открыть на GitHub` и коммит через GitHub UI.
+
+### Авторизация и прямой commit из веб-интерфейса
+- Вставьте GitHub PAT в поле `GitHub Token (PAT)` и нажмите `Подключить`.
+- Откройте markdown-файл, внесите изменения и нажмите `Commit to GitHub`.
+- Коммит создается напрямую в ветке `main` через GitHub Contents API.
+
+Требования к токену:
+- Fine-grained PAT: Repository permissions → `Contents: Read and write` для репозитория `kilevoy/hh`.
+- Classic PAT: scope `repo` (или `public_repo`, если репозиторий публичный).
+
+Безопасность:
+- Токен хранится только в `localStorage` вашего браузера и может быть удален кнопкой `Отключить`.
