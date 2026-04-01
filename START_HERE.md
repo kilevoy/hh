@@ -31,3 +31,14 @@
 - Переводы: `ru/SKILL.md`, `ru/references/`, `ru/releases/`, `ru/VERSIONS.md`
 
 Используйте эти документы как "инструкции", а папки поиска работы — как "рабочие артефакты".
+
+## Где брать улучшенные версии
+
+Используйте раздел `career-upgraded/`:
+- `career-upgraded/resume/`
+- `career-upgraded/stories/`
+- `career-upgraded/cover-letters/`
+- `career-upgraded/interviews/`
+- `career-upgraded/companies/`
+- `career-upgraded/skills.md`
+- `career-upgraded/linkedin.md`

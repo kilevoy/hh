@@ -45,6 +45,7 @@ const rootCareerFiles = new Set([
   "PLAN_7_DAYS.md"
 ]);
 const careerFolders = new Set([
+  "career-upgraded",
   "companies",
   "cover-letters",
   "interviews",
@@ -52,6 +53,7 @@ const careerFolders = new Set([
   "stories"
 ]);
 const nameTranslations = {
+  "career-upgraded": "карьера-усиленная",
   "companies": "компании",
   "target-companies.md": "целевые-компании.md",
   "cover-letters": "сопроводительные-письма",
