@@ -36,6 +36,21 @@ let currentLanguage = "ru";
 
 const tokenStorageKey = "hh-editor::github-token";
 const languageStorageKey = "hh-editor::language";
+const rootCareerFiles = new Set([
+  "README.md",
+  "linkedin.md",
+  "skills.md",
+  "START_HERE.md",
+  "PROJECT_STRUCTURE.md",
+  "PLAN_7_DAYS.md"
+]);
+const careerFolders = new Set([
+  "companies",
+  "cover-letters",
+  "interviews",
+  "resume",
+  "stories"
+]);
 const nameTranslations = {
   "companies": "компании",
   "target-companies.md": "целевые-компании.md",
@@ -72,6 +87,14 @@ function resolveSourcePath(path) {
     return `ru/${path}`;
   }
   return path;
+}
+
+function isCareerPath(path) {
+  if (rootCareerFiles.has(path)) {
+    return true;
+  }
+  const topLevel = path.split("/")[0];
+  return careerFolders.has(topLevel);
 }
 
 function displayPath(path) {
@@ -289,10 +312,12 @@ async function fetchMarkdownFiles() {
         .map((path) => path.slice(3))
     );
 
-    markdownFiles = allMarkdown.filter((path) => !path.startsWith("ru/"));
+    markdownFiles = allMarkdown
+      .filter((path) => !path.startsWith("ru/"))
+      .filter((path) => isCareerPath(path));
 
     markdownFiles.sort((a, b) => a.localeCompare(b));
-    repoStatus.textContent = `Найдено ${markdownFiles.length} markdown-файлов`;
+    repoStatus.textContent = `Режим фокуса: ${markdownFiles.length} карьерных файлов`;
     redrawTree();
   } catch (error) {
     console.error(error);
@@ -300,6 +325,9 @@ async function fetchMarkdownFiles() {
     translatedFiles = new Set();
     markdownFiles = [
       "README.md",
+      "START_HERE.md",
+      "PROJECT_STRUCTURE.md",
+      "PLAN_7_DAYS.md",
       "linkedin.md",
       "skills.md",
       "companies/target-companies.md",
