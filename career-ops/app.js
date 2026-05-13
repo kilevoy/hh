@@ -29,6 +29,7 @@ const labels = {
   interviews: { title: "Интервью", subtitle: "Раунды, подготовка и итоги" },
   resume: { title: "Резюме", subtitle: "Печатная версия для откликов и отправки работодателям" },
   resumeAlt: { title: "Резюме 2", subtitle: "Копия в стиле документа со структурными таблицами" },
+  resumeWord: { title: "Резюме 3", subtitle: "Строгая Word-версия для отправки работодателям" },
   profile: { title: "Профиль", subtitle: "Целевая роль, ограничения и позиционирование" },
   playbooks: { title: "Плейбуки", subtitle: "Процессы поиска вакансий и подготовки к интервью" },
 };
@@ -39,6 +40,7 @@ const nav = [
   ["interviews", "◇", "Интервью"],
   ["resume", "▣", "Резюме"],
   ["resumeAlt", "▧", "Резюме 2"],
+  ["resumeWord", "◫", "Резюме 3"],
   ["profile", "◎", "Профиль"],
   ["playbooks", "▤", "Плейбуки"],
 ];
@@ -169,7 +171,7 @@ function toolbar(view) {
   if (view === "interviews") {
     return `<div class="toolbar"><button class="action" data-action="new-interview"><span class="ico">＋</span>Интервью</button></div>`;
   }
-  if (view === "resume" || view === "resumeAlt") {
+  if (view === "resume" || view === "resumeAlt" || view === "resumeWord") {
     return `
       <div class="toolbar">
         <button class="action" data-action="print-resume"><span class="ico">⎙</span>Печать / PDF</button>
@@ -192,6 +194,7 @@ function renderView(view) {
   if (view === "interviews") return interviewsView();
   if (view === "resume") return resumeView();
   if (view === "resumeAlt") return resumeAltView();
+  if (view === "resumeWord") return resumeWordView();
   if (view === "profile") return profileView();
   return playbooksView();
 }
@@ -814,6 +817,125 @@ function resumeAltView() {
   `;
 }
 
+function resumeWordView() {
+  return `
+    <article class="resume-word">
+      <header class="resume-word-header">
+        <div>
+          <h1>РЫКУНОВ АНДРЕЙ НИКОЛАЕВИЧ</h1>
+          <p class="resume-word-position">Заместитель коммерческого директора / Руководитель направления продаж</p>
+          <div class="resume-word-contact">
+            <span>г. Челябинск</span>
+            <span>31 мая 1971 г.</span>
+            <span>+7 (919) 343-48-71</span>
+            <span>rykunov@gmail.com</span>
+            <span>готов к командировкам</span>
+          </div>
+        </div>
+        ${profilePhoto("resume-word-photo")}
+      </header>
+
+      <section class="resume-word-meta">
+        <div><strong>Занятость:</strong> полная</div>
+        <div><strong>График:</strong> полный день</div>
+        <div><strong>Зарплата:</strong> по договоренности</div>
+      </section>
+
+      <section class="resume-word-section">
+        <h2>Профессиональный профиль</h2>
+        <p>Опытный руководитель коммерческого блока с 18+ годами управления продажами в сегменте металлоконструкций и строительных материалов. Эксперт в развитии филиальных сетей, внедрении CRM-систем и автоматизации коммерческих процессов. Успешный опыт управления командами до 85 человек и коммерческими бюджетами с годовым оборотом более 1 млрд рублей.</p>
+      </section>
+
+      <section class="resume-word-section">
+        <h2>Ключевые компетенции</h2>
+        <div class="resume-word-competencies">
+          <span>Управление продажами</span>
+          <span>Филиальные сети</span>
+          <span>B2B-переговоры</span>
+          <span>Коммерческое планирование</span>
+          <span>CRM и автоматизация</span>
+          <span>Power BI и управленческая аналитика</span>
+          <span>Бюджетирование</span>
+          <span>Развитие команд</span>
+        </div>
+      </section>
+
+      <section class="resume-word-section">
+        <h2>Опыт работы</h2>
+        ${wordJob("04.2008 — н.в.", "ООО «ИНСИ Стальные конструкции», г. Челябинск", "Заместитель коммерческого директора / Заместитель директора / Руководитель направления", [
+          "Управление продажами с годовым оборотом более 1 млрд рублей.",
+          "Масштабирование бизнеса в регионах РФ и участие в запуске филиальной сети.",
+          "Внедрение MS Dynamics CRM, 1C CRM, amoCRM как бизнес-заказчик: от ТЗ до обучения пользователей.",
+          "Разработка управленческих дашбордов Power BI для мониторинга KPI в реальном времени.",
+          "Создание внутренних калькуляторов и сервисов, ускоривших подготовку коммерческих предложений на 30%.",
+          "Управление дивизионами: Урал, Запад, направления «Кровля», «Кровля и фасады»."
+        ])}
+        ${wordJob("12.2003 — 02.2008", "АО «Челябинский трубопрокатный завод», г. Челябинск", "Начальник отдела продаж", [
+          "Организация системной работы отдела продаж трубной продукции.",
+          "Развитие клиентской базы и переговоры с первыми лицами крупных компаний.",
+          "Подбор и обучение команды менеджеров, выполнение плановых показателей."
+        ])}
+        ${wordJob("06.2000 — 12.2003", "ЗАО «Челябинский профнастил», г. Челябинск", "Менеджер по продажам → директор по стратегическому маркетингу → директор по сбыту → директор центра продаж", [
+          "Управление сбытовой структурой завода и филиальной сетью.",
+          "Развитие продаж в промышленном и строительном сегментах.",
+          "Участие в открытии филиалов, совмещение коммерческого и маркетингового функционала."
+        ])}
+        ${wordJob("08.1992 — 06.2000", "ОАО «Связьинформ» / Челябгорэлектросвязь, г. Челябинск", "Кабельщик", [
+          "Техническое обслуживание и монтаж кабельных линий связи."
+        ])}
+      </section>
+
+      <section class="resume-word-section">
+        <h2>Навыки</h2>
+        <table class="resume-word-table">
+          <thead>
+            <tr><th>Управление</th><th>Технологии</th><th>Отрасль</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Руководство продажами</td><td>MS Dynamics CRM</td><td>Рынок металлопродукции РФ</td></tr>
+            <tr><td>Филиальные сети</td><td>1C CRM, amoCRM</td><td>Строительные материалы</td></tr>
+            <tr><td>Стратегическое планирование</td><td>Power BI, Excel</td><td>Металлургическая отрасль</td></tr>
+            <tr><td>Финансовый контроль</td><td>1С:Предприятие</td><td>B2B-продажи</td></tr>
+            <tr><td>Развитие команд</td><td>Электронный документооборот</td><td>Дистрибуция и логистика</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="resume-word-grid">
+        <div class="resume-word-section">
+          <h2>Образование</h2>
+          <p><strong>2006</strong> — Южно-Уральский государственный университет, экономика и управление на предприятии</p>
+          <p><strong>1998</strong> — Университет Российской академии образования, юридический факультет</p>
+        </div>
+        <div class="resume-word-section">
+          <h2>Дополнительно</h2>
+          <ul>
+            <li>Готовность к командировкам</li>
+            <li>Водительские права категории B</li>
+            <li>Русский — родной</li>
+            <li>Рекомендации по запросу</li>
+          </ul>
+        </div>
+      </section>
+    </article>
+  `;
+}
+
+function wordJob(period, company, role, points) {
+  return `
+    <div class="resume-word-job">
+      <div class="resume-word-job-head">
+        <strong>${company}</strong>
+        <span>${period}</span>
+      </div>
+      <p><em>${role}</em></p>
+      <ul>
+        ${points.map((point) => `<li>${point}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+}
+
 function qwenSection(icon, title, content) {
   return `
     <section class="resume-qwen-section">
@@ -847,7 +969,7 @@ function profilePhoto(className) {
 }
 
 function downloadCurrentResumeAsWord() {
-  const resume = document.querySelector(".resume-document, .resume-qwen");
+  const resume = document.querySelector(".resume-document, .resume-qwen, .resume-word");
   if (!resume) {
     showToast("Откройте резюме для экспорта");
     return;
@@ -865,9 +987,12 @@ function downloadCurrentResumeAsWord() {
     })
     .join("\n");
 
-  const title = state.view === "resumeAlt"
-    ? "Рыкунов Андрей Николаевич - резюме 2"
-    : "Рыкунов Андрей Николаевич - резюме";
+  const titleByView = {
+    resume: "Рыкунов Андрей Николаевич - резюме",
+    resumeAlt: "Рыкунов Андрей Николаевич - резюме 2",
+    resumeWord: "Рыкунов Андрей Николаевич - резюме 3",
+  };
+  const title = titleByView[state.view] || "Рыкунов Андрей Николаевич - резюме";
 
   const html = `
     <!doctype html>
@@ -879,7 +1004,7 @@ function downloadCurrentResumeAsWord() {
           body { background: #ffffff; margin: 0; padding: 0; }
           .sidebar, .topbar, .mobile-nav, .toolbar { display: none !important; }
           ${styles}
-          .resume-document, .resume-qwen {
+          .resume-document, .resume-qwen, .resume-word {
             box-shadow: none !important;
             margin: 0 auto !important;
           }
