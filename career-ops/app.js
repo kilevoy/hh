@@ -30,6 +30,7 @@ const labels = {
   resume: { title: "Резюме", subtitle: "Печатная версия для откликов и отправки работодателям" },
   resumeAlt: { title: "Резюме 2", subtitle: "Копия в стиле документа со структурными таблицами" },
   resumeWord: { title: "Резюме 3", subtitle: "Строгая Word-версия для отправки работодателям" },
+  resumeExecutive: { title: "Резюме 4", subtitle: "Executive Design для управленческих позиций" },
   profile: { title: "Профиль", subtitle: "Целевая роль, ограничения и позиционирование" },
   playbooks: { title: "Плейбуки", subtitle: "Процессы поиска вакансий и подготовки к интервью" },
 };
@@ -41,6 +42,7 @@ const nav = [
   ["resume", "▣", "Резюме"],
   ["resumeAlt", "▧", "Резюме 2"],
   ["resumeWord", "◫", "Резюме 3"],
+  ["resumeExecutive", "◩", "Резюме 4"],
   ["profile", "◎", "Профиль"],
   ["playbooks", "▤", "Плейбуки"],
 ];
@@ -171,7 +173,7 @@ function toolbar(view) {
   if (view === "interviews") {
     return `<div class="toolbar"><button class="action" data-action="new-interview"><span class="ico">＋</span>Интервью</button></div>`;
   }
-  if (view === "resume" || view === "resumeAlt" || view === "resumeWord") {
+  if (view === "resume" || view === "resumeAlt" || view === "resumeWord" || view === "resumeExecutive") {
     return `
       <div class="toolbar">
         <button class="action" data-action="print-resume"><span class="ico">⎙</span>Печать / PDF</button>
@@ -195,6 +197,7 @@ function renderView(view) {
   if (view === "resume") return resumeView();
   if (view === "resumeAlt") return resumeAltView();
   if (view === "resumeWord") return resumeWordView();
+  if (view === "resumeExecutive") return resumeExecutiveView();
   if (view === "profile") return profileView();
   return playbooksView();
 }
@@ -921,6 +924,148 @@ function resumeWordView() {
   `;
 }
 
+function resumeExecutiveView() {
+  return `
+    <article class="resume-exec">
+      <header class="resume-exec-hero">
+        <div class="resume-exec-title">
+          <p class="resume-exec-kicker">Executive Design</p>
+          <h1>РЫКУНОВ АНДРЕЙ НИКОЛАЕВИЧ</h1>
+          <p>Коммерческий директор / Директор по продажам / Заместитель коммерческого директора</p>
+          <div class="resume-exec-contact">
+            <span>Челябинск</span>
+            <span>+7 (919) 343-48-71</span>
+            <span>rykunov@gmail.com</span>
+            <span>Полная занятость</span>
+            <span>Полный день</span>
+            <span>Готов к командировкам</span>
+          </div>
+        </div>
+        <figure class="resume-exec-photo resume-photo">
+          <img src="assets/executive-photo.png" alt="Фото Рыкунова Андрея Николаевича" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+          <span>РА</span>
+        </figure>
+      </header>
+
+      <section class="resume-exec-block">
+        <div>
+          <h2>Позиционирование</h2>
+          <p>Коммерческий руководитель с 18+ годами управления продажами в металлоконструкциях, строительных материалах и B2B-дистрибуции. Сильная зона - управление филиальной сетью, CRM/BI-аналитика, стандартизация процессов и рост операционной управляемости продаж.</p>
+        </div>
+        <div class="resume-exec-metrics">
+          <div><strong>18+</strong><span>лет управления продажами</span></div>
+          <div><strong>85</strong><span>сотрудников в командах</span></div>
+          <div><strong>1+ млрд ₽</strong><span>годовой оборот</span></div>
+          <div><strong>12+</strong><span>филиалы и регионы</span></div>
+        </div>
+      </section>
+
+      <section class="resume-exec-cards">
+        ${execCard("Коммерческий контур", "Планирование, ценообразование, дебиторская задолженность, KPI и финансовый контроль.")}
+        ${execCard("Цифровизация продаж", "MS Dynamics CRM, 1C CRM, amoCRM, Power BI; постановка ТЗ, внедрение, обучение.")}
+        ${execCard("Филиальная сеть", "Запуск представительств, стандартизация процессов, управление руководителями и регионами.")}
+      </section>
+
+      <section class="resume-exec-section">
+        <h2>Опыт работы</h2>
+        ${execJob("04.2008 - н.в.", "18 лет 1 мес.", "ООО «ИНСИ Стальные конструкции», Челябинск", "Производство и продажа металлоконструкций, строительных материалов", "Карьерный рост: Руководитель направления -> Заместитель директора -> Заместитель коммерческого директора", [
+          "Управление продажами с годовым оборотом более 1 млрд рублей; сопровождение коммерческого цикла от планирования и ценообразования до контроля дебиторской задолженности и финансовых показателей.",
+          "Управление дивизионами: Урал, Запад, направления «Кровля», «Кровля и фасады»; координация руководителей и региональных команд.",
+          "Участие в развитии филиальной сети: запуск представительств, стандартизация процессов, внедрение единых правил работы с клиентами, планами и отчетностью.",
+          "Внедрение CRM-ландшафта: MS Dynamics CRM, 1C CRM, amoCRM; описание бизнес-логики, постановка ТЗ, обучение пользователей, контроль качества внедрения.",
+          "Разработка управленческих дашбордов Power BI для контроля KPI, продаж, динамики и исполнения планов.",
+          "Запуск внутренних калькуляторов и сервисов для подготовки коммерческих предложений; сокращение времени расчетов примерно на 30%."
+        ])}
+      </section>
+
+      <section class="resume-exec-section">
+        <h2>Предыдущий опыт</h2>
+        ${execJob("12.2003 - 02.2008", "4 года 2 мес.", "АО «Челябинский трубопрокатный завод», Челябинск", "Металлургическое производство и торговля трубной продукцией", "Начальник отдела продаж", [
+          "Организация системной работы отдела продаж трубной продукции.",
+          "Развитие клиентской базы и переговоры с первыми лицами крупных компаний.",
+          "Подбор и обучение менеджеров, контроль выполнения плановых показателей."
+        ])}
+        ${execJob("06.2000 - 12.2003", "3 года 6 мес.", "ЗАО «Челябинский профнастил», Челябинск", "Производство профнастила, металлочерепицы, сэндвич-панелей", "Директор центра продаж / директор по сбыту / директор по стратегическому маркетингу", [
+          "Управление сбытовой структурой завода и филиальной сетью.",
+          "Развитие продаж в промышленном и строительном сегментах.",
+          "Участие в открытии филиалов, совмещение коммерческого и маркетингового функционала."
+        ])}
+        ${execJob("08.1992 - 06.2000", "7 лет 10 мес.", "ОАО «Связьинформ» / Челябгорэлектросвязь", "Сфера телекоммуникаций", "Кабельщик", [
+          "Техническое обслуживание и монтаж кабельных линий связи."
+        ])}
+      </section>
+
+      <section class="resume-exec-cards resume-exec-projects">
+        ${execCard("CRM и BI", "Бизнес-заказчик внедрения CRM-систем и дашбордов Power BI для регулярного контроля продаж.")}
+        ${execCard("Масштабирование", "Участие в запуске и стандартизации филиальной сети компании в разных регионах РФ.")}
+        ${execCard("Команды", "Построение управляемой структуры сбыта, наставничество и развитие руководителей филиалов.")}
+      </section>
+
+      <section class="resume-exec-section">
+        <h2>Ключевые компетенции</h2>
+        <div class="resume-exec-skill-grid">
+          ${execSkillColumn("Управление", ["Продажи B2B", "Филиальная сеть", "Команды до 85 чел.", "Бюджеты и KPI", "Переговоры с ЛПР"])}
+          ${execSkillColumn("Технологии", ["MS Dynamics CRM", "1C CRM / 1C", "amoCRM", "Power BI", "Excel, ЭДО"])}
+          ${execSkillColumn("Отрасль", ["Металлоконструкции", "Металлопродукция", "Стройматериалы", "Дистрибуция", "Логистика"])}
+        </div>
+      </section>
+
+      <section class="resume-exec-bottom">
+        <div>
+          <h2>Образование</h2>
+          <p><strong>2006 | Высшее</strong><br>Южно-Уральский государственный университет, Челябинск<br><em>Экономика и управление на предприятии</em></p>
+          <p><strong>1998 | Высшее</strong><br>Университет Российской академии образования, Москва<br><em>Юридический факультет</em></p>
+        </div>
+        <div>
+          <h2>Дополнительно</h2>
+          <ul>
+            <li>Готовность к командировкам</li>
+            <li>Водительские права категории B</li>
+            <li>Русский - родной</li>
+            <li>Рекомендации по запросу</li>
+          </ul>
+        </div>
+      </section>
+    </article>
+  `;
+}
+
+function execCard(title, text) {
+  return `
+    <div class="resume-exec-card">
+      <h3>${title}</h3>
+      <p>${text}</p>
+    </div>
+  `;
+}
+
+function execJob(period, duration, company, industry, role, points) {
+  return `
+    <div class="resume-exec-job">
+      <div class="resume-exec-job-head">
+        <div><strong>${period}</strong><span>${duration}</span></div>
+        <h3>${company}</h3>
+      </div>
+      <p><em>${industry}</em></p>
+      <p class="resume-exec-role">${role}</p>
+      <ul>
+        ${points.map((point) => `<li>${point}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function execSkillColumn(title, items) {
+  return `
+    <div class="resume-exec-skill-col">
+      <h3>${title}</h3>
+      <ul>
+        ${items.map((item) => `<li>${item}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+}
+
 function wordJob(period, company, role, points) {
   return `
     <div class="resume-word-job">
@@ -969,7 +1114,7 @@ function profilePhoto(className) {
 }
 
 function downloadCurrentResumeAsWord() {
-  const resume = document.querySelector(".resume-document, .resume-qwen, .resume-word");
+  const resume = document.querySelector(".resume-document, .resume-qwen, .resume-word, .resume-exec");
   if (!resume) {
     showToast("Откройте резюме для экспорта");
     return;
@@ -991,6 +1136,7 @@ function downloadCurrentResumeAsWord() {
     resume: "Рыкунов Андрей Николаевич - резюме",
     resumeAlt: "Рыкунов Андрей Николаевич - резюме 2",
     resumeWord: "Рыкунов Андрей Николаевич - резюме 3",
+    resumeExecutive: "Рыкунов Андрей Николаевич - резюме 4 Executive Design",
   };
   const title = titleByView[state.view] || "Рыкунов Андрей Николаевич - резюме";
 
@@ -1004,7 +1150,7 @@ function downloadCurrentResumeAsWord() {
           body { background: #ffffff; margin: 0; padding: 0; }
           .sidebar, .topbar, .mobile-nav, .toolbar { display: none !important; }
           ${styles}
-          .resume-document, .resume-qwen, .resume-word {
+          .resume-document, .resume-qwen, .resume-word, .resume-exec {
             box-shadow: none !important;
             margin: 0 auto !important;
           }
