@@ -170,7 +170,12 @@ function toolbar(view) {
     return `<div class="toolbar"><button class="action" data-action="new-interview"><span class="ico">＋</span>Интервью</button></div>`;
   }
   if (view === "resume" || view === "resumeAlt") {
-    return `<div class="toolbar"><button class="action" data-action="print-resume"><span class="ico">⎙</span>Печать / PDF</button></div>`;
+    return `
+      <div class="toolbar">
+        <button class="action" data-action="print-resume"><span class="ico">⎙</span>Печать / PDF</button>
+        <button class="ghost" data-action="download-word"><span class="ico">▣</span>Скачать Word</button>
+      </div>
+    `;
   }
   if (view === "today") {
     return `<div class="toolbar"><button class="action" data-action="new-task"><span class="ico">＋</span>Задача</button><button class="ghost" data-view="applications"><span class="ico">□</span>Воронка</button></div>`;
@@ -841,6 +846,60 @@ function profilePhoto(className) {
   `;
 }
 
+function downloadCurrentResumeAsWord() {
+  const resume = document.querySelector(".resume-document, .resume-qwen");
+  if (!resume) {
+    showToast("Откройте резюме для экспорта");
+    return;
+  }
+
+  const styles = Array.from(document.styleSheets)
+    .map((sheet) => {
+      try {
+        return Array.from(sheet.cssRules)
+          .map((rule) => rule.cssText)
+          .join("\n");
+      } catch {
+        return "";
+      }
+    })
+    .join("\n");
+
+  const title = state.view === "resumeAlt"
+    ? "Рыкунов Андрей Николаевич - резюме 2"
+    : "Рыкунов Андрей Николаевич - резюме";
+
+  const html = `
+    <!doctype html>
+    <html lang="ru">
+      <head>
+        <meta charset="utf-8">
+        <title>${escapeHtml(title)}</title>
+        <style>
+          body { background: #ffffff; margin: 0; padding: 0; }
+          .sidebar, .topbar, .mobile-nav, .toolbar { display: none !important; }
+          ${styles}
+          .resume-document, .resume-qwen {
+            box-shadow: none !important;
+            margin: 0 auto !important;
+          }
+        </style>
+      </head>
+      <body>${resume.outerHTML}</body>
+    </html>
+  `;
+
+  const blob = new Blob(["\ufeff", html], {
+    type: "application/msword;charset=utf-8",
+  });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${title}.doc`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showToast("Файл Word сформирован");
+}
+
 function profileView() {
   const p = state.profile;
   return `
@@ -1028,6 +1087,7 @@ function bindEvents() {
   bindAction("import", importData);
   bindAction("open-jobops", () => window.open("http://localhost:3005", "_blank"));
   bindAction("print-resume", () => window.print());
+  bindAction("download-word", downloadCurrentResumeAsWord);
 
   document.querySelectorAll("[data-action='edit-application']").forEach((button) => {
     button.addEventListener("click", () => {
